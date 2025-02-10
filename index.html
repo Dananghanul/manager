@@ -1,9 +1,9 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>THÔNG TIN HỌC VIÊN HANUL</title>
+  <title>Quản lý thông tin học viên Taekwondo</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -125,7 +125,7 @@
 </head>
 <body>
   <header>
-    <h1>THÔNG TIN HỌC VIÊN HANUL</h1>
+    <h1>Quản lý thông tin học viên Taekwondo</h1>
   </header>
   <div class="container">
     <h2>Đăng nhập</h2>
@@ -134,6 +134,7 @@
       <select id="userRole">
         <option value="parent">Phụ huynh</option>
         <option value="coach">Huấn luyện viên</option>
+        <option value="tonghop">Danh sách tổng hợp</option>
       </select>
       <div id="passwordContainer" class="hidden">
         <label for="password">Mật khẩu:</label>
@@ -206,6 +207,8 @@
             Import Excel
           </label>
           <input type="file" id="importExcelFile" accept=".xls,.xlsx" style="display: none;" onchange="importExcel()">
+          <button onclick="luuDuLieuVaoGoogleSheets()">Lưu vào Google Sheets</button>
+          <button onclick="exportExcel()">Export Excel</button>
         </div>
       </div>
       <h3>Danh sách học viên</h3>
@@ -285,9 +288,36 @@
     </div>
     <div id="ketQuaTimKiem"></div>
   </div>
+  <div class="container hidden" id="tongHopSection">
+    <h2>Danh sách tổng hợp học viên</h2>
+    <button onclick="taiDuLieuTuGoogleSheets()">Tải dữ liệu từ Google Sheets</button>
+    <table id="bangTongHop">
+      <thead>
+        <tr>
+          <th>Họ tên</th>
+          <th>Ngày sinh</th>
+          <th>Giới tính</th>
+          <th>Cân nặng (kg)</th>
+          <th>Chiều cao (cm)</th>
+          <th>Bệnh bẩm sinh</th>
+          <th>Ngày đăng ký</th>
+          <th>Lịch tập luyện</th>
+          <th>Cơ sở</th>
+          <th>Cấp đai</th>
+          <th>Gói học phí (VNĐ)</th>
+          <th>Số điện thoại</th>
+          <th>Địa chỉ</th>
+          <th>Đủ điều kiện thi</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
   <script>
     const hocViens = [];
     let hocVienIndexChinhSua = -1;
+    const GOOGLE_APPS_SCRIPT_URL = "URL_WEB_APP_GOOGLE_APPS_SCRIPT";
 
     // Đăng nhập
     function login() {
@@ -296,15 +326,21 @@
       const errorMessage = document.getElementById('errorMessage');
 
       if (userRole === 'coach') {
-        if (password !== '5') {
+        if (password !== 'Hanul123') {
           errorMessage.textContent = 'Mật khẩu không đúng!';
           return;
         }
         document.getElementById('coachSection').classList.remove('hidden');
         document.getElementById('parentSection').classList.add('hidden');
+        document.getElementById('tongHopSection').classList.add('hidden');
       } else if (userRole === 'parent') {
         document.getElementById('parentSection').classList.remove('hidden');
         document.getElementById('coachSection').classList.add('hidden');
+        document.getElementById('tongHopSection').classList.add('hidden');
+      } else if (userRole === 'tonghop') {
+        document.getElementById('tongHopSection').classList.remove('hidden');
+        document.getElementById('coachSection').classList.add('hidden');
+        document.getElementById('parentSection').classList.add('hidden');
       }
 
       document.querySelector('.container:first-child').classList.add('hidden');
@@ -592,6 +628,107 @@
         }
       };
       reader.readAsArrayBuffer(file);
+    }
+
+    // Lưu dữ liệu vào Google Sheets
+    async function luuDuLieuVaoGoogleSheets() {
+      const data = hocViens.map(hv => ({
+        hoTen: hv.hoTen,
+        ngaySinh: hv.ngaySinh,
+        gioiTinh: hv.gioiTinh,
+        canNang: hv.canNang,
+        chieuCao: hv.chieuCao,
+        benhBamSinh: hv.benhBamSinh,
+        ngayDangKy: hv.ngayDangKy,
+        lichTapLuyen: hv.lichTapLuyen,
+        coSo: hv.coSo,
+        capDai: hv.capDai,
+        goiHocPhi: hv.goiHocPhi,
+        soDienThoai: hv.soDienThoai,
+        diaChi: hv.diaChi,
+        duDieuKienThi: hv.duDieuKienThi
+      }));
+
+      try {
+        await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "save", data })
+        });
+        alert("Dữ liệu đã được lưu vào Google Sheets!");
+      } catch (error) {
+        console.error("Lỗi khi lưu dữ liệu:", error);
+        alert("Đã xảy ra lỗi khi lưu dữ liệu vào Google Sheets.");
+      }
+    }
+
+    // Tải dữ liệu từ Google Sheets
+    async function taiDuLieuTuGoogleSheets() {
+      try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "load" })
+        });
+        const data = await response.json();
+        hocViens.length = 0; // Xóa dữ liệu cũ
+        hocViens.push(...data.map(item => ({
+          hoTen: item.HoTen,
+          ngaySinh: item.NgaySinh,
+          gioiTinh: item.GioiTinh,
+          canNang: parseFloat(item.CanNang),
+          chieuCao: parseFloat(item.ChieuCao),
+          benhBamSinh: item.BenhBamSinh,
+          ngayDangKy: item.NgayDangKy,
+          lichTapLuyen: item.LichTapLuyen,
+          coSo: item.CoSo,
+          capDai: item.CapDai,
+          goiHocPhi: item.GoiHocPhi,
+          soDienThoai: item.SoDienThoai,
+          diaChi: item.DiaChi,
+          duDieuKienThi: item.DuDieuKienThi === "Có"
+        })));
+        renderBangHocVien();
+        renderBangTongHop();
+        alert("Dữ liệu đã được tải từ Google Sheets!");
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu:", error);
+        alert("Đã xảy ra lỗi khi tải dữ liệu từ Google Sheets.");
+      }
+    }
+
+    // Export dữ liệu ra file Excel
+    function exportExcel() {
+      const worksheet = XLSX.utils.json_to_sheet(hocViens);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachHocVien");
+      XLSX.writeFile(workbook, "DanhSachHocVien.xlsx");
+    }
+
+    // Hiển thị danh sách tổng hợp học viên
+    function renderBangTongHop() {
+      const tbody = document.querySelector('#bangTongHop tbody');
+      tbody.innerHTML = '';
+      hocViens.forEach(hv => {
+        const row = `
+          <tr>
+            <td>${hv.hoTen}</td>
+            <td>${hv.ngaySinh}</td>
+            <td>${hv.gioiTinh}</td>
+            <td>${hv.canNang}</td>
+            <td>${hv.chieuCao}</td>
+            <td>${hv.benhBamSinh || 'Không'}</td>
+            <td>${hv.ngayDangKy}</td>
+            <td>${hv.lichTapLuyen}</td>
+            <td>${hv.coSo}</td>
+            <td>${hv.capDai}</td>
+            <td>${hv.goiHocPhi}</td>
+            <td>${hv.soDienThoai}</td>
+            <td>${hv.diaChi}</td>
+            <td>${hv.duDieuKienThi ? 'Có' : 'Không'}</td>
+          </tr>`;
+        tbody.innerHTML += row;
+      });
     }
 
     // Lọc danh sách học viên đủ điều kiện thi
