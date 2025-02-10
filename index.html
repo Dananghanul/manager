@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản lý thông tin học viên Taekwondo</title>
+  <title>THÔNG TIN HỌC VIÊN HANUL CENTER</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -125,7 +125,7 @@
 </head>
 <body>
   <header>
-    <h1>Quản lý thông tin học viên Taekwondo</h1>
+    <h1>THÔNG TIN HỌC VIÊN HANUL CENTER</h1>
   </header>
   <div class="container">
     <h2>Đăng nhập</h2>
@@ -296,7 +296,7 @@
       const errorMessage = document.getElementById('errorMessage');
 
       if (userRole === 'coach') {
-        if (password !== 'Hanul123') {
+        if (password !== '5') {
           errorMessage.textContent = 'Mật khẩu không đúng!';
           return;
         }
@@ -781,48 +781,5 @@
       return danhSachCapDai[currentIndex + 1];
     }
   </script>
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDq7XHKp7gm5oXNdc4sA4gBtXNWyB3185E",
-  authDomain: "quan-ly-hoc-sinh-70688.firebaseapp.com",
-  projectId: "quan-ly-hoc-sinh-70688",
-  storageBucket: "quan-ly-hoc-sinh-70688.firebasestorage.app",
-  messagingSenderId: "547664333870",
-  appId: "1:547664333870:web:998256665084bc00be23bf",
-  measurementId: "G-HHY9XFR11H"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-// Lưu học viên vào Firestore
-function luuDuLieu() {
-  hocViens.forEach((hocVien, index) => {
-    db.collection("hocViens").doc(`hocVien-${index}`).set(hocVien)
-      .then(() => console.log("Dữ liệu đã được lưu!"))
-      .catch((error) => console.error("Lỗi khi lưu dữ liệu: ", error));
-  });
-}
-// Tải dữ liệu học viên từ Firestore
-function taiDuLieu() {
-  db.collection("hocViens").get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-        hocViens.push(doc.data());
-      });
-      renderBangHocVien();
-    })
-    .catch((error) => console.error("Lỗi khi tải dữ liệu: ", error));
-}
-
-// Gọi hàm tải dữ liệu khi trang được tải
-window.onload = taiDuLieu;
 </body>
 </html>
