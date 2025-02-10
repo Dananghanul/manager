@@ -631,37 +631,41 @@
     }
 
     // Lưu dữ liệu vào Google Sheets
-    async function luuDuLieuVaoGoogleSheets() {
-      const data = hocViens.map(hv => ({
-        hoTen: hv.hoTen,
-        ngaySinh: hv.ngaySinh,
-        gioiTinh: hv.gioiTinh,
-        canNang: hv.canNang,
-        chieuCao: hv.chieuCao,
-        benhBamSinh: hv.benhBamSinh,
-        ngayDangKy: hv.ngayDangKy,
-        lichTapLuyen: hv.lichTapLuyen,
-        coSo: hv.coSo,
-        capDai: hv.capDai,
-        goiHocPhi: hv.goiHocPhi,
-        soDienThoai: hv.soDienThoai,
-        diaChi: hv.diaChi,
-        duDieuKienThi: hv.duDieuKienThi
-      }));
+async function luuDuLieuVaoGoogleSheets() {
+  const data = hocViens.map(hv => ({
+    hoTen: hv.hoTen,
+    ngaySinh: hv.ngaySinh,
+    gioiTinh: hv.gioiTinh,
+    canNang: hv.canNang,
+    chieuCao: hv.chieuCao,
+    benhBamSinh: hv.benhBamSinh,
+    ngayDangKy: hv.ngayDangKy,
+    lichTapLuyen: hv.lichTapLuyen,
+    coSo: hv.coSo,
+    capDai: hv.capDai,
+    goiHocPhi: hv.goiHocPhi,
+    soDienThoai: hv.soDienThoai,
+    diaChi: hv.diaChi,
+    duDieuKienThi: hv.duDieuKienThi
+  }));
 
-      try {
-        await fetch(GOOGLE_APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "save", data })
-        });
-        alert("Dữ liệu đã được lưu vào Google Sheets!");
-      } catch (error) {
-        console.error("Lỗi khi lưu dữ liệu:", error);
-        alert("Đã xảy ra lỗi khi lưu dữ liệu vào Google Sheets.");
-      }
+  try {
+    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save", data })
+    });
+    const result = await response.json();
+    if (result.success) {
+      alert("Dữ liệu đã được lưu vào Google Sheets!");
+    } else {
+      alert(`Lỗi: ${result.error}`);
     }
-
+  } catch (error) {
+    console.error("Lỗi khi gửi dữ liệu:", error);
+    alert("Đã xảy ra lỗi khi lưu dữ liệu vào Google Sheets.");
+  }
+}
     // Tải dữ liệu từ Google Sheets
     async function taiDuLieuTuGoogleSheets() {
       try {
