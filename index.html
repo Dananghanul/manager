@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>THÔNG TIN HỌC VIÊN HANUL</title>
+  <title>Quản lý thông tin học viên Taekwondo</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -125,7 +125,7 @@
 </head>
 <body>
   <header>
-    <h1>THÔNG TIN HỌC VIÊN HANUL</h1>
+    <h1>Quản lý thông tin học viên Taekwondo</h1>
   </header>
   <div class="container">
     <h2>Đăng nhập</h2>
@@ -207,7 +207,7 @@
             Import Excel
           </label>
           <input type="file" id="importExcelFile" accept=".xls,.xlsx" style="display: none;" onchange="importExcel()">
-          <button onclick="luuDuLieuVao5Sheets()">Lưu vào 5 Sheets</button>
+          <button onclick="luuDuLieuVaoGoogleSheets()">Lưu vào Google Sheets</button>
           <button onclick="exportExcel()">Export Excel</button>
         </div>
       </div>
@@ -290,7 +290,7 @@
   </div>
   <div class="container hidden" id="tongHopSection">
     <h2>Danh sách tổng hợp học viên</h2>
-    <button onclick="taiDuLieuTu5Sheets()">Tải dữ liệu từ 5 Sheets</button>
+    <button onclick="taiDuLieuTuGoogleSheets()">Tải dữ liệu từ Google Sheets</button>
     <table id="bangTongHop">
       <thead>
         <tr>
@@ -317,7 +317,7 @@
   <script>
     const hocViens = [];
     let hocVienIndexChinhSua = -1;
-    const 5_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxeOyygzBpg5kD629ZJHeJARxgZ-NroGOZ5k-_pcPIrXSSuIqieFKAaCMI8fK-nbE4/exec";
+    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxeOyygzBpg5kD629ZJHeJARxgZ-NroGOZ5k-_pcPIrXSSuIqieFKAaCMI8fK-nbE4/exec";
 
     // Đăng nhập
     function login() {
@@ -326,7 +326,7 @@
       const errorMessage = document.getElementById('errorMessage');
 
       if (userRole === 'coach') {
-        if (password !== '5') {
+        if (password !== 'Hanul123') {
           errorMessage.textContent = 'Mật khẩu không đúng!';
           return;
         }
