@@ -6,6 +6,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
 
 <script>
+let db;
+document.addEventListener("DOMContentLoaded", function () {
   // Cấu hình Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyDq7XHKp7gm5oXNdc4sA4gBtXNWyB3185E",
@@ -153,7 +155,7 @@
       <label for="userRole">Bạn là ai?</label>
       <select id="userRole">
         <option value="parent">Phụ huynh</option>
-        <option value="coach">Huấn luyện viên</option>
+        <option value="">Huấn luyện viên</option>
         <option value="tonghop">Danh sách tổng hợp</option>
       </select>
       <div id="passwordContainer" class="hidden">
@@ -164,7 +166,7 @@
       <p id="errorMessage" class="error"></p>
     </div>
   </div>
-  <div class="container hidden" id="coachSection">
+  <div class="container hidden" id="Section">
     <nav>
       <button onclick="showTab('hoc-vien')">Quản lý học viên</button>
       <button onclick="showTab('cham-thi')">Chấm thi</button>
@@ -651,9 +653,14 @@
     }
 
     // Lưu dữ liệu
-async function luuDuLieuLenFirestore() {
-  try {
-    const batch = db.batch(); // Sử dụng batch để lưu nhiều bản ghi cùng lúc
+  window.luuDuLieuLenFirestore = async function () {
+        if (!db) {
+          alert("Firebase Firestore chưa được khởi tạo!");
+          return;
+        }
+        try {
+          const batch = db.batch();
+    // Sử dụng batch để lưu nhiều bản ghi cùng lúc
 
     hocViens.forEach((hocVien, index) => {
       const docRef = db.collection("hocViens").doc(`hocVien-${index}`);
@@ -675,7 +682,8 @@ async function luuDuLieuLenFirestore() {
       });
     });
 
-    await batch.commit(); // Gửi dữ liệu lên Firestore
+    await batch.commit(); 
+    // Gửi dữ liệu lên Firestore
     alert("Dữ liệu đã được lưu vào Firestore!");
   } catch (error) {
     console.error("Lỗi khi lưu dữ liệu:", error);
