@@ -1,25 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<!-- Import Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
-<script>
-  // Cấu hình Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyDq7XHKp7gm5oXNdc4sA4gBtXNWyB3185E",
-    authDomain: "quan-ly-hoc-sinh-70688.firebaseapp.com",
-    projectId: "quan-ly-hoc-sinh-70688",
-    storageBucket: "quan-ly-hoc-sinh-70688.firebasestorage.app",
-    messagingSenderId: "547664333870",
-    appId: "1:547664333870:web:998256665084bc00be23bf"
-    measurementId: "G-HHY9XFR11H"
-  };
-
-  // Khởi tạo Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quản lý thông tin học viên Taekwondo</title>
@@ -152,7 +133,7 @@
       <label for="userRole">Bạn là ai?</label>
       <select id="userRole">
         <option value="parent">Phụ huynh</option>
-        <option value="">Huấn luyện viên</option>
+        <option value="coach">Huấn luyện viên</option>
         <option value="tonghop">Danh sách tổng hợp</option>
       </select>
       <div id="passwordContainer" class="hidden">
@@ -163,7 +144,7 @@
       <p id="errorMessage" class="error"></p>
     </div>
   </div>
-  <div class="container hidden" id="Section">
+  <div class="container hidden" id="coachSection">
     <nav>
       <button onclick="showTab('hoc-vien')">Quản lý học viên</button>
       <button onclick="showTab('cham-thi')">Chấm thi</button>
@@ -226,7 +207,7 @@
             Import Excel
           </label>
           <input type="file" id="importExcelFile" accept=".xls,.xlsx" style="display: none;" onchange="importExcel()">
-          <button onclick="luuDuLieuLenFirestore()">Lưu vào Firestore</button>
+          <button onclick="luuDuLieuVaoGoogleSheets()">Lưu vào Google Sheets</button>
           <button onclick="exportExcel()">Export Excel</button>
         </div>
       </div>
@@ -309,7 +290,7 @@
   </div>
   <div class="container hidden" id="tongHopSection">
     <h2>Danh sách tổng hợp học viên</h2>
-    <button onclick="taiDuLieuTuFirestore()">Tải dữ liệu từ Firestore</button>
+    <button onclick="taiDuLieuTuGoogleSheets()">Tải dữ liệu từ Google Sheets</button>
     <table id="bangTongHop">
       <thead>
         <tr>
@@ -336,7 +317,7 @@
   <script>
     const hocViens = [];
     let hocVienIndexChinhSua = -1;
-    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxeOyygzBpg5kD629ZJHeJARxgZ-NroGOZ5k-_pcPIrXSSuIqieFKAaCMI8fK-nbE4/exec";
+    const GOOGLE_APPS_SCRIPT_URL = "URL_WEB_APP_GOOGLE_APPS_SCRIPT";
 
     // Đăng nhập
     function login() {
@@ -649,77 +630,73 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // Lưu dữ liệu
-  window.luuDuLieuLenFirestore = async function () {
-        if (!db) {
-          alert("Firebase Firestore chưa được khởi tạo!");
-          return;
-        }
-        try {
-          const batch = db.batch();
-    // Sử dụng batch để lưu nhiều bản ghi cùng lúc
+    // Lưu dữ liệu vào Google Sheets
+    async function luuDuLieuVaoGoogleSheets() {
+      const data = hocViens.map(hv => ({
+        hoTen: hv.hoTen,
+        ngaySinh: hv.ngaySinh,
+        gioiTinh: hv.gioiTinh,
+        canNang: hv.canNang,
+        chieuCao: hv.chieuCao,
+        benhBamSinh: hv.benhBamSinh,
+        ngayDangKy: hv.ngayDangKy,
+        lichTapLuyen: hv.lichTapLuyen,
+        coSo: hv.coSo,
+        capDai: hv.capDai,
+        goiHocPhi: hv.goiHocPhi,
+        soDienThoai: hv.soDienThoai,
+        diaChi: hv.diaChi,
+        duDieuKienThi: hv.duDieuKienThi
+      }));
 
-    hocViens.forEach((hocVien, index) => {
-      const docRef = db.collection("hocViens").doc(`hocVien-${index}`);
-      batch.set(docRef, {
-        hoTen: hocVien.hoTen,
-        ngaySinh: hocVien.ngaySinh,
-        gioiTinh: hocVien.gioiTinh,
-        canNang: hocVien.canNang,
-        chieuCao: hocVien.chieuCao,
-        benhBamSinh: hocVien.benhBamSinh,
-        ngayDangKy: hocVien.ngayDangKy,
-        lichTapLuyen: hocVien.lichTapLuyen,
-        coSo: hocVien.coSo,
-        capDai: hocVien.capDai,
-        goiHocPhi: hocVien.goiHocPhi,
-        soDienThoai: hocVien.soDienThoai,
-        diaChi: hocVien.diaChi,
-        duDieuKienThi: hocVien.duDieuKienThi
-      });
-    });
+      try {
+        await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "save", data })
+        });
+        alert("Dữ liệu đã được lưu vào Google Sheets!");
+      } catch (error) {
+        console.error("Lỗi khi lưu dữ liệu:", error);
+        alert("Đã xảy ra lỗi khi lưu dữ liệu vào Google Sheets.");
+      }
+    }
 
-    await batch.commit(); 
-    // Gửi dữ liệu lên Firestore
-    alert("Dữ liệu đã được lưu vào Firestore!");
-  } catch (error) {
-    console.error("Lỗi khi lưu dữ liệu:", error);
-    alert("Đã xảy ra lỗi khi lưu dữ liệu vào Firestore.");
-  }
-}
-    // Tải dữ liệu
-    async function taiDuLieuTuFirestore() {
-  try {
-    const querySnapshot = await db.collection("hocViens").get();
-    hocViens.length = 0; // Xóa dữ liệu cũ
+    // Tải dữ liệu từ Google Sheets
+    async function taiDuLieuTuGoogleSheets() {
+      try {
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "load" })
+        });
+        const data = await response.json();
+        hocViens.length = 0; // Xóa dữ liệu cũ
+        hocViens.push(...data.map(item => ({
+          hoTen: item.HoTen,
+          ngaySinh: item.NgaySinh,
+          gioiTinh: item.GioiTinh,
+          canNang: parseFloat(item.CanNang),
+          chieuCao: parseFloat(item.ChieuCao),
+          benhBamSinh: item.BenhBamSinh,
+          ngayDangKy: item.NgayDangKy,
+          lichTapLuyen: item.LichTapLuyen,
+          coSo: item.CoSo,
+          capDai: item.CapDai,
+          goiHocPhi: item.GoiHocPhi,
+          soDienThoai: item.SoDienThoai,
+          diaChi: item.DiaChi,
+          duDieuKienThi: item.DuDieuKienThi === "Có"
+        })));
+        renderBangHocVien();
+        renderBangTongHop();
+        alert("Dữ liệu đã được tải từ Google Sheets!");
+      } catch (error) {
+        console.error("Lỗi khi tải dữ liệu:", error);
+        alert("Đã xảy ra lỗi khi tải dữ liệu từ Google Sheets.");
+      }
+    }
 
-    querySnapshot.forEach(doc => {
-      const data = doc.data();
-      hocViens.push({
-        hoTen: data.hoTen,
-        ngaySinh: data.ngaySinh,
-        gioiTinh: data.gioiTinh,
-        canNang: data.canNang,
-        chieuCao: data.chieuCao,
-        benhBamSinh: data.benhBamSinh,
-        ngayDangKy: data.ngayDangKy,
-        lichTapLuyen: data.lichTapLuyen,
-        coSo: data.coSo,
-        capDai: data.capDai,
-        goiHocPhi: data.goiHocPhi,
-        soDienThoai: data.soDienThoai,
-        diaChi: data.diaChi,
-        duDieuKienThi: data.duDieuKienThi
-      });
-    });
-
-    renderBangHocVien();
-    alert("Dữ liệu đã được tải từ Firestore!");
-  } catch (error) {
-    console.error("Lỗi khi tải dữ liệu:", error);
-    alert("Đã xảy ra lỗi khi tải dữ liệu từ Firestore.");
-  }
-}
     // Export dữ liệu ra file Excel
     function exportExcel() {
       const worksheet = XLSX.utils.json_to_sheet(hocViens);
@@ -735,7 +712,7 @@
       hocViens.forEach(hv => {
         const row = `
           <tr>
-            <td>${hv.hoTen}</td>
+                      <td>${hv.hoTen}</td>
             <td>${hv.ngaySinh}</td>
             <td>${hv.gioiTinh}</td>
             <td>${hv.canNang}</td>
