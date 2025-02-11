@@ -319,9 +319,18 @@
 
     // Đăng nhập
     function login() {
-      const userRole = document.getElementById('userRole').value;
-      const password = document.getElementById('password').value;
-      const errorMessage = document.getElementById('errorMessage');
+  const userRole = document.getElementById('userRole')?.value || '';
+  const password = document.getElementById('password')?.value || '';
+  const errorMessage = document.getElementById('errorMessage');
+  const coachSection = document.getElementById('coachSection');
+  const parentSection = document.getElementById('parentSection');
+  const tongHopSection = document.getElementById('tongHopSection');
+  const firstContainer = document.querySelector('.container:first-child');
+
+  if (!errorMessage || !coachSection || !parentSection || !tongHopSection || !firstContainer) {
+    console.error("Một số phần tử HTML không tồn tại!");
+    return;
+  }
 
       if (userRole === 'coach') {
         if (password !== '5') {
