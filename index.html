@@ -207,7 +207,6 @@
             Import Excel
           </label>
           <input type="file" id="importExcelFile" accept=".xls,.xlsx" style="display: none;" onchange="importExcel()">
-          <button onclick="luuDuLieuVaoGoogleSheets()">Lưu vào Google Sheets</button>
           <button onclick="exportExcel()">Export Excel</button>
         </div>
       </div>
@@ -290,7 +289,6 @@
   </div>
   <div class="container hidden" id="tongHopSection">
     <h2>Danh sách tổng hợp học viên</h2>
-    <button onclick="taiDuLieuTuGoogleSheets()">Tải dữ liệu từ Google Sheets</button>
     <table id="bangTongHop">
       <thead>
         <tr>
@@ -629,74 +627,6 @@
       };
       reader.readAsArrayBuffer(file);
     }
-
-    // Lưu dữ liệu vào Google Sheets
-    async function luuDuLieuVaoGoogleSheets() {
-      const data = hocViens.map(hv => ({
-        hoTen: hv.hoTen,
-        ngaySinh: hv.ngaySinh,
-        gioiTinh: hv.gioiTinh,
-        canNang: hv.canNang,
-        chieuCao: hv.chieuCao,
-        benhBamSinh: hv.benhBamSinh,
-        ngayDangKy: hv.ngayDangKy,
-        lichTapLuyen: hv.lichTapLuyen,
-        coSo: hv.coSo,
-        capDai: hv.capDai,
-        goiHocPhi: hv.goiHocPhi,
-        soDienThoai: hv.soDienThoai,
-        diaChi: hv.diaChi,
-        duDieuKienThi: hv.duDieuKienThi
-      }));
-
-      try {
-        await fetch(GOOGLE_APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "save", data })
-        });
-        alert("Dữ liệu đã được lưu vào Google Sheets!");
-      } catch (error) {
-        console.error("Lỗi khi lưu dữ liệu:", error);
-        alert("Đã xảy ra lỗi khi lưu dữ liệu vào Google Sheets.");
-      }
-    }
-
-    // Tải dữ liệu từ Google Sheets
-    async function taiDuLieuTuGoogleSheets() {
-      try {
-        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "load" })
-        });
-        const data = await response.json();
-        hocViens.length = 0; // Xóa dữ liệu cũ
-        hocViens.push(...data.map(item => ({
-          hoTen: item.HoTen,
-          ngaySinh: item.NgaySinh,
-          gioiTinh: item.GioiTinh,
-          canNang: parseFloat(item.CanNang),
-          chieuCao: parseFloat(item.ChieuCao),
-          benhBamSinh: item.BenhBamSinh,
-          ngayDangKy: item.NgayDangKy,
-          lichTapLuyen: item.LichTapLuyen,
-          coSo: item.CoSo,
-          capDai: item.CapDai,
-          goiHocPhi: item.GoiHocPhi,
-          soDienThoai: item.SoDienThoai,
-          diaChi: item.DiaChi,
-          duDieuKienThi: item.DuDieuKienThi === "Có"
-        })));
-        renderBangHocVien();
-        renderBangTongHop();
-        alert("Dữ liệu đã được tải từ Google Sheets!");
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu:", error);
-        alert("Đã xảy ra lỗi khi tải dữ liệu từ Google Sheets.");
-      }
-    }
-
     // Export dữ liệu ra file Excel
     function exportExcel() {
       const worksheet = XLSX.utils.json_to_sheet(hocViens);
