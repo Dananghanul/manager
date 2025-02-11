@@ -4,10 +4,7 @@
 <!-- Import Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
-
 <script>
-let db;
-document.addEventListener("DOMContentLoaded", function () {
   // Cấu hình Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyDq7XHKp7gm5oXNdc4sA4gBtXNWyB3185E",
@@ -348,7 +345,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const errorMessage = document.getElementById('errorMessage');
 
       if (userRole === 'coach') {
-        if (password !== 'Hanul123') {
+        if (password !== '5') {
           errorMessage.textContent = 'Mật khẩu không đúng!';
           return;
         }
