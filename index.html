@@ -1,852 +1,1186 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản lý thông tin học viên Taekwondo</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-      color: #333;
-    }
-    header {
-      background: linear-gradient(135deg, #ff6f61, #ff3e7f);
-      color: white;
-      padding: 20px;
-      text-align: center;
-      border-bottom-left-radius: 20px;
-      border-bottom-right-radius: 20px;
-    }
-    .container {
-      padding: 20px;
-      background-color: white;
-      border-radius: 15px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      margin: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    table, th, td {
-      border: 1px solid #ddd;
-    }
-    th, td {
-      padding: 12px;
-      text-align: left;
-    }
-    th {
-      background-color: #ff6f61;
-      color: white;
-      border-radius: 0;
-    }
-    .form-container {
-      margin-top: 20px;
-    }
-    .form-container input, .form-container select, .form-container button {
-      margin: 5px 0;
-      padding: 10px;
-      width: 100%;
-      box-sizing: border-box;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      transition: border-color 0.3s;
-    }
-    .form-container input:focus, .form-container select:focus {
-      border-color: #ff6f61;
-    }
-    .form-container button {
-      background: linear-gradient(135deg, #ff6f61, #ff3e7f);
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 8px;
-      transition: background-color 0.3s;
-    }
-    .form-container button:hover {
-      background: linear-gradient(135deg, #ff3e7f, #ff6f61);
-    }
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-    }
-    .hidden {
-      display: none;
-    }
-    .search-container {
-      margin-top: 20px;
-    }
-    .error {
-      color: red;
-      font-weight: bold;
-    }
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-    }
-    .checkbox-container label {
-      margin-left: 5px;
-    }
-    .rank {
-      font-weight: bold;
-      color: green;
-    }
-    .fail-button, .absent-button {
-      background: #ff4d4d;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .fail-button:hover, .absent-button:hover {
-      background: #cc0000;
-    }
-    .success-button {
-      background: #4caf50;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .success-button:hover {
-      background: #3e8e41;
-    }
-  </style>
-  <!-- Thêm thư viện SheetJS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taekwondo Tournament Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0A2463',
+                        secondary: '#800E13',
+                        accent: '#FFD700',
+                        light: '#FBFAFF',
+                        dark: '#1E1E24'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .bracket-line {
+            position: absolute;
+            border-right: 2px solid #0A2463;
+            border-bottom: 2px solid #0A2463;
+            height: 50%;
+            width: 30px;
+        }
+        .bracket-line-vertical {
+            position: absolute;
+            border-right: 2px solid #0A2463;
+            height: 100%;
+            width: 30px;
+        }
+        .bracket-container {
+            position: relative;
+            min-height: 500px;
+        }
+        .match-card {
+            transition: all 0.3s ease;
+        }
+        .match-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .medal-gold {
+            background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
+        }
+        .medal-silver {
+            background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);
+        }
+        .medal-bronze {
+            background: linear-gradient(135deg, #CD7F32 0%, #A67C52 100%);
+        }
+        .medal-participation {
+            background: linear-gradient(135deg, #FBFAFF 0%, #E5E5E5 100%);
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
 </head>
-<body>
-  <header>
-    <h1>Quản lý thông tin học viên Taekwondo</h1>
-  </header>
-  <div class="container">
-    <h2>Đăng nhập</h2>
-    <div class="form-container">
-      <label for="userRole">Bạn là ai?</label>
-      <select id="userRole">
-        <option value="parent">Phụ huynh</option>
-        <option value="coach">Huấn luyện viên</option>
-        <option value="tonghop">Danh sách tổng hợp</option>
-      </select>
-      <div id="passwordContainer" class="hidden">
-        <label for="password">Mật khẩu:</label>
-        <input type="password" id="password" placeholder="Nhập mật khẩu">
-      </div>
-      <button onclick="login()">Đăng nhập</button>
-      <p id="errorMessage" class="error"></p>
-    </div>
-  </div>
-  <div class="container hidden" id="coachSection">
-    <nav>
-      <button onclick="showTab('hoc-vien')">Quản lý học viên</button>
-      <button onclick="showTab('cham-thi')">Chấm thi</button>
-    </nav>
-    <div id="hoc-vien">
-      <h2>Thêm/Chỉnh sửa thông tin học viên</h2>
-      <div class="form-container">
-        <input type="text" id="hoTen" placeholder="Họ tên">
-        <input type="date" id="ngaySinh" placeholder="Ngày sinh">
-        <select id="gioiTinh">
-          <option value="">Giới tính</option>
-          <option value="Nam">Nam</option>
-          <option value="Nữ">Nữ</option>
-        </select>
-        <label for="canNang">Cân nặng (kg):</label>
-        <input type="number" id="canNang" placeholder="Nhập cân nặng">
-        <label for="chieuCao">Chiều cao (cm):</label>
-        <input type="number" id="chieuCao" placeholder="Nhập chiều cao">
-        <label for="benhBamSinh">Bệnh bẩm sinh:</label>
-        <input type="text" id="benhBamSinh" placeholder="Nhập bệnh bẩm sinh (nếu có)">
-        <label for="ngayDangKy">Ngày đăng ký:</label>
-        <input type="date" id="ngayDangKy">
-        <label for="lichTapLuyen">Lịch tập luyện:</label>
-        <select id="lichTapLuyen" multiple onchange="tinhGoiHocPhi()">
-          <option value="Thứ 2">Thứ 2</option>
-          <option value="Thứ 3">Thứ 3</option>
-          <option value="Thứ 4">Thứ 4</option>
-          <option value="Thứ 5">Thứ 5</option>
-          <option value="Thứ 6">Thứ 6</option>
-          <option value="Thứ 7">Thứ 7</option>
-          <option value="Chủ nhật">Chủ nhật</option>
-        </select>
-        <label for="coSo">Cơ sở:</label>
-        <select id="coSo">
-          <option value="Cơ sở 1">Cơ sở 1</option>
-          <option value="Cơ sở 2">Cơ sở 2</option>
-          <option value="Cơ sở 3">Cơ sở 3</option>
-          <option value="Cơ sở 4">Cơ sở 4</option>
-          <option value="Cơ sở 5">Cơ sở 5</option>
-        </select>
-        <label for="capDai">Cấp đai:</label>
-        <select id="capDai">
-          <option value="Đai trắng">Đai trắng</option>
-          <option value="Đai vàng">Đai vàng</option>
-          <option value="Đai xanh lá">Đai xanh lá</option>
-          <option value="Đai xanh dương">Đai xanh dương</option>
-          <option value="Đai đỏ 1">Đai đỏ 1</option>
-          <option value="Đai đỏ 2">Đai đỏ 2</option>
-          <option value="Đai đỏ 3">Đai đỏ 3</option>
-          <option value="Đai đen">Đai đen</option>
-        </select>
-        <label for="goiHocPhi">Gói học phí (VNĐ):</label>
-        <input type="text" id="goiHocPhi" readonly>
-        <input type="text" id="soDienThoai" placeholder="Số điện thoại">
-        <input type="text" id="diaChi" placeholder="Địa chỉ">
-        <div class="action-buttons">
-          <button onclick="themHocVien()">Thêm học viên</button>
-          <button onclick="capNhatHocVien()" id="btnCapNhatHocVien" class="hidden">Cập nhật học viên</button>
-          <label for="importExcelFile" class="button" style="background: linear-gradient(135deg, #ff6f61, #ff3e7f); color: white; padding: 10px; border-radius: 8px; cursor: pointer;">
-            Import Excel
-          </label>
-          <input type="file" id="importExcelFile" accept=".xls,.xlsx" style="display: none;" onchange="importExcel()">
-          <button onclick="exportExcel()">Export Excel</button>
+<body class="bg-light font-sans">
+    <!-- Navigation -->
+    <nav class="bg-primary text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-fist-raised text-2xl text-accent"></i>
+                <span class="text-xl font-bold">TKD Tournament Pro</span>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#dashboard" class="hover:text-accent transition">Dashboard</a>
+                <a href="#athletes" class="hover:text-accent transition">Athletes</a>
+                <a href="#brackets" class="hover:text-accent transition">Brackets</a>
+                <a href="#scoring" class="hover:text-accent transition">Scoring</a>
+                <a href="#results" class="hover:text-accent transition">Results</a>
+            </div>
+            <button class="md:hidden text-white focus:outline-none">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
         </div>
-      </div>
-      <h3>Danh sách học viên</h3>
-      <table id="bangHocVien">
-        <thead>
-          <tr>
-            <th>Họ tên</th>
-            <th>Ngày sinh</th>
-            <th>Giới tính</th>
-            <th>Cân nặng (kg)</th>
-            <th>Chiều cao (cm)</th>
-            <th>Bệnh bẩm sinh</th>
-            <th>Ngày đăng ký</th>
-            <th>Lịch tập luyện</th>
-            <th>Cơ sở</th>
-            <th>Cấp đai</th>
-            <th>Gói học phí (VNĐ)</th>
-            <th>Số điện thoại</th>
-            <th>Địa chỉ</th>
-            <th>Đủ điều kiện thi</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-6">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-dark">Tournament Dashboard</h2>
+                <div class="flex space-x-3">
+                    <button class="bg-secondary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                        <i class="fas fa-file-import mr-2"></i>Import Data
+                    </button>
+                    <button class="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                        <i class="fas fa-file-export mr-2"></i>Export Results
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Stats Cards -->
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-primary">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500">Total Athletes</p>
+                            <h3 class="text-3xl font-bold text-dark">642</h3>
+                        </div>
+                        <i class="fas fa-users text-primary text-2xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-secondary">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500">Matches Completed</p>
+                            <h3 class="text-3xl font-bold text-dark">128</h3>
+                        </div>
+                        <i class="fas fa-flag-checkered text-secondary text-2xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-accent">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500">Clubs Participating</p>
+                            <h3 class="text-3xl font-bold text-dark">42</h3>
+                        </div>
+                        <i class="fas fa-medal text-accent text-2xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-gray-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500">Events Scheduled</p>
+                            <h3 class="text-3xl font-bold text-dark">18</h3>
+                        </div>
+                        <i class="fas fa-calendar-alt text-gray-500 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Upcoming Matches -->
+                <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
+                    <h3 class="text-xl font-semibold text-dark mb-4">Upcoming Matches</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <div>
+                                <p class="font-medium">Kyorugi - Male 14-17 -68kg</p>
+                                <p class="text-sm text-gray-600">Court 2 - 10:30 AM</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 bg-primary text-white text-sm rounded">Ranking</span>
+                                <button class="text-primary hover:text-secondary">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <div>
+                                <p class="font-medium">Poomsae - Female 18+ Individual</p>
+                                <p class="text-sm text-gray-600">Court 1 - 10:45 AM</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 bg-secondary text-white text-sm rounded">Open</span>
+                                <button class="text-primary hover:text-secondary">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                            <div>
+                                <p class="font-medium">Kyukpa - Team Breaking</p>
+                                <p class="text-sm text-gray-600">Main Arena - 11:15 AM</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 bg-primary text-white text-sm rounded">Ranking</span>
+                                <button class="text-primary hover:text-secondary">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medal Count -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-semibold text-dark mb-4">Top Clubs by Medals</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full medal-gold flex items-center justify-center text-white font-bold mr-3">1</div>
+                            <div class="flex-1">
+                                <p class="font-medium">Dragon Taekwondo Academy</p>
+                                <div class="flex space-x-2 text-xs">
+                                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>12</span>
+                                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-gray-400 mr-1"></span>8</span>
+                                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-amber-700 mr-1"></span>5</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full medal-silver flex items-center justify-center text-white font-bold mr-3">2</div>
+                            <div class="flex-1">
+                                <p class="font-medium">Tiger Martial Arts</p>
+                                <div class="flex space-x-2 text-xs">
+                                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>9</span>
+                                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-gray-400 mr-1"></span>11</span>
+                                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-amber-700 mr-1"></span>7</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full medal-bronze flex items-center justify-center text-white font-bold mr-3">3</div>
+                            <div class="flex-1">
+                                <p class="font-medium">Phoenix Taekwondo Club</p>
+                                <div class="flex space-x-2 text-xs">
+                                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>7</span>
+                                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-gray-400 mr-1"></span>9</span>
+                                    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-amber-700 mr-1"></span>12</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Athletes Management Section -->
+        <section id="athletes" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-dark">Athletes Management</h2>
+                <div class="flex space-x-3">
+                    <button class="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                        <i class="fas fa-plus mr-2"></i>Add Athlete
+                    </button>
+                    <button class="bg-secondary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                        <i class="fas fa-random mr-2"></i>Generate Groups
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                <div class="p-4 bg-gray-50 border-b flex flex-wrap justify-between items-center">
+                    <div class="flex space-x-3 mb-2 md:mb-0">
+                        <div class="relative">
+                            <select class="appearance-none bg-white border border-gray-300 rounded pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                                <option>All Genders</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <select class="appearance-none bg-white border border-gray-300 rounded pl-3 pr-8 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary">
+                                <option>All Age Groups</option>
+                                <option>8-10 years</option>
+                                <option>11-13 years</option>
+                                <option>14-17 years</option>
+                                <option>18+ years</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative w-full md:w-auto">
+                        <input type="text" placeholder="Search athletes..." class="bg-white border border-gray-300 rounded pl-10 pr-4 py-2 text-sm w-full focus:outline-none focus:ring-1 focus:ring-primary">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Club</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Events</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TKD001</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Alex Johnson</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Male</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">15</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">68kg</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dragon TKD</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Kyorugi</span>
+                                    <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">Poomsae</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <button class="text-primary hover:text-secondary mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-500 hover:text-red-700">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TKD042</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Sarah Miller</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Female</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">12</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">42kg</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Tiger MA</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Kyorugi</span>
+                                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Kyukpa</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <button class="text-primary hover:text-secondary mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-500 hover:text-red-700">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">TKD128</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">David Kim</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Male</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">17</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">73kg</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Phoenix TKD</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Kyorugi</span>
+                                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Freestyle</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <button class="text-primary hover:text-secondary mr-3">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-500 hover:text-red-700">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"> Previous </a>
+                        <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"> Next </a>
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700"> Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">642</span> athletes </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"> <span class="sr-only">Previous</span> <i class="fas fa-chevron-left"></i> </a>
+                                <a href="#" aria-current="page" class="z-10 bg-primary border-primary text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium"> 1 </a>
+                                <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium"> 2 </a>
+                                <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium"> 3 </a>
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"> ... </span>
+                                <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium"> 8 </a>
+                                <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"> <span class="sr-only">Next</span> <i class="fas fa-chevron-right"></i> </a>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Brackets Section -->
+        <section id="brackets" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-dark">Brackets Generator</h2>
+                <div class="flex space-x-3">
+                    <button class="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                        <i class="fas fa-project-diagram mr-2"></i>View All Brackets
+                    </button>
+                    <button id="generateBracketsBtn" class="bg-secondary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                        <i class="fas fa-random mr-2"></i>Generate Brackets
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="flex flex-wrap -mx-3">
+                    <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+                        <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-event-type">
+                            Event Type
+                        </label>
+                        <div class="relative">
+                            <select id="grid-event-type" class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-primary">
+                                <option>Kyorugi (Sparring)</option>
+                                <option>Poomsae (Forms)</option>
+                                <option>Kyukpa (Breaking)</option>
+                                <option>Freestyle</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+                        <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-format">
+                            Competition Format
+                        </label>
+                        <div class="relative">
+                            <select id="grid-format" class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-primary">
+                                <option>Ranking (Gold/Silver/Bronze)</option>
+                                <option>Open (Participation Medals)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/3 px-3">
+                        <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-category">
+                            Category
+                        </label>
+                        <div class="relative">
+                            <select id="grid-category" class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-primary">
+                                <option>Male 14-17 -68kg</option>
+                                <option>Female 14-17 -59kg</option>
+                                <option>Male 18+ -80kg</option>
+                                <option>Female 18+ -67kg</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-dark mb-4">Kyorugi - Male 14-17 -68kg (Ranking Format)</h3>
+                
+                <div class="bracket-container">
+                    <!-- This is a simplified bracket visualization -->
+                    <div class="flex justify-between">
+                        <!-- Round 1 -->
+                        <div class="w-1/4">
+                            <h4 class="text-center font-medium mb-2">Round 1</h4>
+                            <div class="space-y-4">
+                                <div class="match-card bg-gray-50 p-3 rounded border border-gray-200 relative">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-medium">Match 1</span>
+                                        <span class="text-xs bg-primary text-white px-2 py-1 rounded">Court 1</span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <span>Alex Johnson</span>
+                                            <span class="text-sm font-medium">Dragon TKD</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span>David Kim</span>
+                                            <span class="text-sm font-medium">Phoenix TKD</span>
+                                        </div>
+                                    </div>
+                                    <div class="bracket-line" style="right: -30px; top: 50%;"></div>
+                                </div>
+                                <div class="match-card bg-gray-50 p-3 rounded border border-gray-200 relative">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-medium">Match 2</span>
+                                        <span class="text-xs bg-primary text-white px-2 py-1 rounded">Court 2</span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <span>Michael Brown</span>
+                                            <span class="text-sm font-medium">Tiger MA</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span>James Wilson</span>
+                                            <span class="text-sm font-medium">Eagle TKD</span>
+                                        </div>
+                                    </div>
+                                    <div class="bracket-line" style="right: -30px; top: 50%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Round 2 -->
+                        <div class="w-1/4">
+                            <h4 class="text-center font-medium mb-2">Semi-Finals</h4>
+                            <div class="space-y-4 mt-12">
+                                <div class="match-card bg-gray-50 p-3 rounded border border-gray-200 relative">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-medium">Match 3</span>
+                                        <span class="text-xs bg-primary text-white px-2 py-1 rounded">Court 1</span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-400">Winner M1</span>
+                                            <span class="text-sm font-medium text-gray-400">Club</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-400">Winner M2</span>
+                                            <span class="text-sm font-medium text-gray-400">Club</span>
+                                        </div>
+                                    </div>
+                                    <div class="bracket-line" style="right: -30px; top: 50%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Finals -->
+                        <div class="w-1/4">
+                            <h4 class="text-center font-medium mb-2">Finals</h4>
+                            <div class="space-y-4 mt-24">
+                                <div class="match-card bg-gray-50 p-3 rounded border border-gray-200 relative">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-medium">Match 4</span>
+                                        <span class="text-xs bg-primary text-white px-2 py-1 rounded">Main Arena</span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-400">Finalist 1</span>
+                                            <span class="text-sm font-medium text-gray-400">Club</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-400">Finalist 2</span>
+                                            <span class="text-sm font-medium text-gray-400">Club</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Results -->
+                        <div class="w-1/4">
+                            <h4 class="text-center font-medium mb-2">Results</h4>
+                            <div class="space-y-4 mt-36">
+                                <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-full medal-gold flex items-center justify-center text-white font-bold">1</div>
+                                        <div>
+                                            <p class="font-medium">Gold Medalist</p>
+                                            <p class="text-sm text-gray-500">Club</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-full medal-silver flex items-center justify-center text-white font-bold">2</div>
+                                        <div>
+                                            <p class="font-medium">Silver Medalist</p>
+                                            <p class="text-sm text-gray-500">Club</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-full medal-bronze flex items-center justify-center text-white font-bold">3</div>
+                                        <div>
+                                            <p class="font-medium">Bronze Medalist</p>
+                                            <p class="text-sm text-gray-500">Club</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scoring Section -->
+        <section id="scoring" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-dark">Match Scoring</h2>
+                <div class="flex space-x-3">
+                    <button class="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh Matches
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Current Matches -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-4 bg-gray-50 border-b">
+                            <h3 class="text-lg font-semibold text-dark">Active Matches</h3>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            <!-- Match 1 -->
+                            <div class="p-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div>
+                                        <span class="font-medium">Match 1 - Kyorugi Male -68kg</span>
+                                        <span class="text-sm text-gray-500 ml-2">Court 1</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">In Progress</span>
+                                        <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Round 2/3</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-4 mb-3">
+                                    <div class="text-center">
+                                        <p class="font-medium">Alex Johnson</p>
+                                        <p class="text-sm text-gray-500">Dragon TKD</p>
+                                    </div>
+                                    <div class="text-center flex items-center justify-center">
+                                        <span class="text-3xl font-bold">2 - 3</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="font-medium">David Kim</p>
+                                        <p class="text-sm text-gray-500">Phoenix TKD</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gray-50 p-3 rounded mb-3">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Points (Red)</label>
+                                            <input type="number" class="w-full border border-gray-300 rounded px-3 py-2" value="2">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Points (Blue)</label>
+                                            <input type="number" class="w-full border border-gray-300 rounded px-3 py-2" value="3">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Warnings (Red)</label>
+                                            <input type="number" class="w-full border border-gray-300 rounded px-3 py-2" value="1">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Warnings (Blue)</label>
+                                            <input type="number" class="w-full border border-gray-300 rounded px-3 py-2" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between">
+                                    <button class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+                                        <i class="fas fa-times mr-2"></i>Cancel Match
+                                    </button>
+                                    <div class="flex space-x-3">
+                                        <button class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition">
+                                            <i class="fas fa-pause mr-2"></i>Pause
+                                        </button>
+                                        <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">
+                                            <i class="fas fa-flag-checkered mr-2"></i>End Match
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Match 2 -->
+                            <div class="p-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div>
+                                        <span class="font-medium">Match 2 - Poomsae Female Individual</span>
+                                        <span class="text-sm text-gray-500 ml-2">Court 3</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Waiting</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-4 mb-3">
+                                    <div class="text-center">
+                                        <p class="font-medium">Sarah Miller</p>
+                                        <p class="text-sm text-gray-500">Tiger MA</p>
+                                    </div>
+                                    <div class="text-center flex items-center justify-center">
+                                        <span class="text-3xl font-bold">-</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="font-medium">Emma Davis</p>
+                                        <p class="text-sm text-gray-500">Dragon TKD</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end">
+                                    <button class="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                                        <i class="fas fa-play mr-2"></i>Start Match
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Scoreboard -->
+                <div>
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-4 bg-gray-50 border-b">
+                            <h3 class="text-lg font-semibold text-dark">Live Scoreboard</h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="mb-4">
+                                <h4 class="font-medium mb-2">Court 1 - Kyorugi Male -68kg</h4>
+                                <div class="bg-gray-50 p-3 rounded">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-medium">Alex Johnson</span>
+                                        <span class="text-xl font-bold">2</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium">David Kim</span>
+                                        <span class="text-xl font-bold">3</span>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-t border-gray-200">
+                                        <p class="text-sm">Round 2/3 - 1:24 remaining</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h4 class="font-medium mb-2">Court 2 - Kyorugi Female -59kg</h4>
+                                <div class="bg-gray-50 p-3 rounded">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-medium">Jessica Lee</span>
+                                        <span class="text-xl font-bold">5</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium">Mia Wilson</span>
+                                        <span class="text-xl font-bold">4</span>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-t border-gray-200">
+                                        <p class="text-sm">Round 3/3 - 0:45 remaining</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-medium mb-2">Court 3 - Poomsae Female Individual</h4>
+                                <div class="bg-gray-50 p-3 rounded">
+                                    <p class="text-center text-gray-500">Match starting soon</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results" class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-dark">Tournament Results</h2>
+                <div class="flex space-x-3">
+                    <button class="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                        <i class="fas fa-file-pdf mr-2"></i>Export PDF
+                    </button>
+                    <button class="bg-secondary text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
+                        <i class="fas fa-file-excel mr-2"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Medal Summary -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b">
+                        <h3 class="text-lg font-semibold text-dark">Medal Summary by Club</h3>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mr-3">1</div>
+                                    <div>
+                                        <p class="font-medium">Dragon Taekwondo Academy</p>
+                                        <p class="text-sm text-gray-500">25 athletes</p>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-4">
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full medal-gold flex items-center justify-center mx-auto mb-1">
+                                            <span class="text-white font-bold">12</span>
+                                        </div>
+                                        <span class="text-xs">Gold</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full medal-silver flex items-center justify-center mx-auto mb-1">
+                                            <span class="text-white font-bold">8</span>
+                                        </div>
+                                        <span class="text-xs">Silver</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full medal-bronze flex items-center justify-center mx-auto mb-1">
+                                            <span class="text-white font-bold">5</span>
+                                        </div>
+                                        <span class="text-xs">Bronze</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full medal-silver text-white flex items-center justify-center font-bold mr-3">2</div>
+                                    <div>
+                                        <p class="font-medium">Tiger Martial Arts</p>
+                                        <p class="text-sm text-gray-500">32 athletes</p>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-4">
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full medal-gold flex items-center justify-center mx-auto mb-1">
+                                            <span class="text-white font-bold">9</span>
+                                        </div>
+                                        <span class="text-xs">Gold</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full medal-silver flex items-center justify-center mx-auto mb-1">
+                                            <span class="text-white font-bold">11</span>
+                                        </div>
+                                        <span class="text-xs">Silver</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full medal-bronze flex items-center justify-center mx-auto mb-1">
+                                            <span class="text-white font-bold">7</span>
+                                        </div>
+                                        <span class="text-xs">Bronze</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full medal-bronze text-white flex items-center justify-center font-bold mr-3">3</div>
+                                    <div>
+                                        <p class="font-medium">Phoenix Taekwondo Club</p>
+                                        <p class="text-sm text-gray-500">18 athletes</p>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-4">
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full medal-gold flex items-center justify-center mx-auto mb-1">
+                                            <span class="text-white font-bold">7</span>
+                                        </div>
+                                        <span class="text-xs">Gold</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full medal-silver flex items-center justify-center mx-auto mb-1">
+                                            <span class="text-white font-bold">9</span>
+                                        </div>
+                                        <span class="text-xs">Silver</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full medal-bronze flex items-center justify-center mx-auto mb-1">
+                                            <span class="text-white font-bold">12</span>
+                                        </div>
+                                        <span class="text-xs">Bronze</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top Athletes -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b">
+                        <h3 class="text-lg font-semibold text-dark">Top Performing Athletes</h3>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <div class="p-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-500"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium">Alex Johnson</p>
+                                    <p class="text-sm text-gray-500">Dragon Taekwondo Academy</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <div class="w-6 h-6 rounded-full medal-gold flex items-center justify-center">
+                                        <i class="fas fa-medal text-xs text-white"></i>
+                                    </div>
+                                    <div class="w-6 h-6 rounded-full medal-gold flex items-center justify-center">
+                                        <i class="fas fa-medal text-xs text-white"></i>
+                                    </div>
+                                    <div class="w-6 h-6 rounded-full medal-silver flex items-center justify-center">
+                                        <i class="fas fa-medal text-xs text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-500"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium">Sarah Miller</p>
+                                    <p class="text-sm text-gray-500">Tiger Martial Arts</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <div class="w-6 h-6 rounded-full medal-gold flex items-center justify-center">
+                                        <i class="fas fa-medal text-xs text-white"></i>
+                                    </div>
+                                    <div class="w-6 h-6 rounded-full medal-silver flex items-center justify-center">
+                                        <i class="fas fa-medal text-xs text-white"></i>
+                                    </div>
+                                    <div class="w-6 h-6 rounded-full medal-bronze flex items-center justify-center">
+                                        <i class="fas fa-medal text-xs text-white"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-500"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium">David Kim</p>
+                                    <p class="text-sm text-gray-500">Phoenix Taekwondo Club</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <div class="w-6 h-6 rounded-full medal-gold flex items-center justify-center">
+                                        <i class="fas fa-medal text-xs text-white"></i>
+                                    </div>
+                                    <div class="w-6 h-6 rounded-full medal-bronze flex items-center justify-center">
+                                        <i class="fas fa-medal text-xs text-white"></i>
+                                    </div>
+                                    <div class="w-6 h-6 rounded-full medal-participation flex items-center justify-center">
+                                        <i class="fas fa-medal text-xs text-gray-500"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Event Results -->
+            <div class="mt-6 bg-white rounded-lg shadow overflow-hidden">
+                <div class="p-4 bg-gray-50 border-b">
+                    <h3 class="text-lg font-semibold text-dark">Event Results</h3>
+                </div>
+                <div class="p-4">
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-3">Kyorugi - Male 14-17 -68kg (Ranking)</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Athlete</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Club</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Medal</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="w-6 h-6 rounded-full medal-gold flex items-center justify-center text-white font-bold">1</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Alex Johnson</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dragon TKD</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">24</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="w-6 h-6 rounded-full medal-gold flex items-center justify-center mx-auto">
+                                                <i class="fas fa-medal text-xs"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="w-6 h-6 rounded-full medal-silver flex items-center justify-center text-white font-bold">2</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">David Kim</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Phoenix TKD</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">22</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="w-6 h-6 rounded-full medal-silver flex items-center justify-center mx-auto">
+                                                <i class="fas fa-medal text-xs"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="w-6 h-6 rounded-full medal-bronze flex items-center justify-center text-white font-bold">3</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Michael Brown</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Tiger MA</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">20</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="w-6 h-6 rounded-full medal-bronze flex items-center justify-center mx-auto">
+                                                <i class="fas fa-medal text-xs"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium mb-3">Poomsae - Female 18+ Individual (Open)</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Emma Davis</p>
+                                        <p class="text-sm text-gray-500">Dragon TKD</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-center">
+                                    <div class="w-8 h-8 rounded-full medal-participation flex items-center justify-center">
+                                        <i class="fas fa-medal text-gray-500"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Sarah Miller</p>
+                                        <p class="text-sm text-gray-500">Tiger MA</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-center">
+                                    <div class="w-8 h-8 rounded-full medal-participation flex items-center justify-center">
+                                        <i class="fas fa-medal text-gray-500"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Jessica Lee</p>
+                                        <p class="text-sm text-gray-500">Eagle TKD</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-center">
+                                    <div class="w-8 h-8 rounded-full medal-participation flex items-center justify-center">
+                                        <i class="fas fa-medal text-gray-500"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-user text-gray-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Mia Wilson</p>
+                                        <p class="text-sm text-gray-500">Phoenix TKD</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-center">
+                                    <div class="w-8 h-8 rounded-full medal-participation flex items-center justify-center">
+                                        <i class="fas fa-medal text-gray-500"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
-    <div id="cham-thi" class="hidden">
-      <h2>Chấm thi</h2>
-      <div class="form-container">
-        <label for="kyThi">Kỳ thi:</label>
-        <select id="kyThi">
-          <option value="Quý 1">Quý 1</option>
-          <option value="Quý 2">Quý 2</option>
-          <option value="Quý 3">Quý 3</option>
-          <option value="Quý 4">Quý 4</option>
-        </select>
-        <label for="capDaiChon">Cấp đai:</label>
-        <select id="capDaiChon">
-          <option value="Đai trắng">Đai trắng</option>
-          <option value="Đai vàng">Đai vàng</option>
-          <option value="Đai xanh lá">Đai xanh lá</option>
-          <option value="Đai xanh dương">Đai xanh dương</option>
-          <option value="Đai đỏ 1">Đai đỏ 1</option>
-          <option value="Đai đỏ 2">Đai đỏ 2</option>
-          <option value="Đai đỏ 3">Đai đỏ 3</option>
-          <option value="Đai đen">Đai đen</option>
-        </select>
-        <button onclick="locDanhSachChamThi()">Hiển thị danh sách</button>
-      </div>
-      <h3>Danh sách chấm thi (tối đa 6 học sinh)</h3>
-      <table id="bangChamThi">
-        <thead>
-          <tr>
-            <th>Số báo danh</th>
-            <th>Học viên</th>
-            <th>Cấp đai hiện tại</th>
-            <th>Kỹ thuật</th>
-            <th>Thể lực</th>
-            <th>Thái độ</th>
-            <th>Tổng điểm</th>
-            <th>Xếp hạng</th>
-            <th>Kết quả</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-      <button onclick="hoanThanhChamThi()">Hoàn thành chấm thi</button>
+
+    <!-- Footer -->
+    <footer class="bg-primary text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-fist-raised text-2xl text-accent"></i>
+                        <span class="text-xl font-bold">TKD Tournament Pro</span>
+                    </div>
+                    <p class="mt-2 text-sm">Comprehensive Taekwondo Tournament Management System</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="hover:text-accent transition">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="hover:text-accent transition">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="hover:text-accent transition">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="hover:text-accent transition">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-sm text-center">
+                <p>&copy; 2023 TKD Tournament Pro. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Generate Brackets Modal -->
+    <div id="generateBracketsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-dark">Generate Brackets</h3>
+                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <p class="text-gray-600">Are you sure you want to generate brackets for the selected category?</p>
+                    <p class="text-sm text-gray-500 mt-2">This will randomly pair athletes while ensuring competitors from the same club don't face each other in initial rounds.</p>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelGenerateBtn" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <button id="confirmGenerateBtn" class="px-4 py-2 bg-secondary text-white rounded hover:bg-opacity-90 transition">
+                        Generate
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <div class="container hidden" id="parentSection">
-    <h2>Tìm kiếm thông tin học viên</h2>
-    <div class="search-container">
-      <input type="text" id="searchHoTen" placeholder="Nhập họ tên học viên">
-      <button onclick="timKiemHocVien()">Tìm kiếm</button>
-    </div>
-    <div id="ketQuaTimKiem"></div>
-  </div>
-  <div class="container hidden" id="tongHopSection">
-    <h2>Danh sách tổng hợp học viên</h2>
-    <table id="bangTongHop">
-      <thead>
-        <tr>
-          <th>Họ tên</th>
-          <th>Ngày sinh</th>
-          <th>Giới tính</th>
-          <th>Cân nặng (kg)</th>
-          <th>Chiều cao (cm)</th>
-          <th>Bệnh bẩm sinh</th>
-          <th>Ngày đăng ký</th>
-          <th>Lịch tập luyện</th>
-          <th>Cơ sở</th>
-          <th>Cấp đai</th>
-          <th>Gói học phí (VNĐ)</th>
-          <th>Số điện thoại</th>
-          <th>Địa chỉ</th>
-          <th>Đủ điều kiện thi</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
-  </div>
-  <script>
-    const hocViens = [];
-    let hocVienIndexChinhSua = -1;
-    const GOOGLE_APPS_SCRIPT_URL = "URL_WEB_APP_GOOGLE_APPS_SCRIPT";
 
-    // Đăng nhập
-    function login() {
-      const userRole = document.getElementById('userRole').value;
-      const password = document.getElementById('password').value;
-      const errorMessage = document.getElementById('errorMessage');
+    <script>
+        // Modal functionality
+        const generateBracketsBtn = document.getElementById('generateBracketsBtn');
+        const generateBracketsModal = document.getElementById('generateBracketsModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelGenerateBtn = document.getElementById('cancelGenerateBtn');
+        const confirmGenerateBtn = document.getElementById('confirmGenerateBtn');
 
-      if (userRole === 'coach') {
-        if (password !== '5') {
-          errorMessage.textContent = 'Mật khẩu không đúng!';
-          return;
-        }
-        document.getElementById('coachSection').classList.remove('hidden');
-        document.getElementById('parentSection').classList.add('hidden');
-        document.getElementById('tongHopSection').classList.add('hidden');
-      } else if (userRole === 'parent') {
-        document.getElementById('parentSection').classList.remove('hidden');
-        document.getElementById('coachSection').classList.add('hidden');
-        document.getElementById('tongHopSection').classList.add('hidden');
-      } else if (userRole === 'tonghop') {
-        document.getElementById('tongHopSection').classList.remove('hidden');
-        document.getElementById('coachSection').classList.add('hidden');
-        document.getElementById('parentSection').classList.add('hidden');
-      }
+        generateBracketsBtn.addEventListener('click', () => {
+            generateBracketsModal.classList.remove('hidden');
+        });
 
-      document.querySelector('.container:first-child').classList.add('hidden');
-      errorMessage.textContent = '';
-    }
+        closeModalBtn.addEventListener('click', () => {
+            generateBracketsModal.classList.add('hidden');
+        });
 
-    // Hiển thị mật khẩu khi chọn vai trò
-    document.getElementById('userRole').addEventListener('change', () => {
-      const userRole = document.getElementById('userRole').value;
-      const passwordContainer = document.getElementById('passwordContainer');
-      if (userRole === 'coach') {
-        passwordContainer.classList.remove('hidden');
-      } else {
-        passwordContainer.classList.add('hidden');
-      }
-    });
+        cancelGenerateBtn.addEventListener('click', () => {
+            generateBracketsModal.classList.add('hidden');
+        });
 
-    // Tính gói học phí dựa trên lịch tập luyện
-    function tinhGoiHocPhi() {
-      const lichTapLuyen = Array.from(document.getElementById('lichTapLuyen').selectedOptions).map(option => option.value);
-      const soBuoiTrongTuan = lichTapLuyen.length;
-      const soBuoiTrongThang = soBuoiTrongTuan * 4; // Giả định 1 tháng = 4 tuần
+        confirmGenerateBtn.addEventListener('click', () => {
+            generateBracketsModal.classList.add('hidden');
+            // Here you would typically call your bracket generation function
+            alert('Brackets generated successfully!');
+        });
 
-      let goiHocPhi = '';
-      if (soBuoiTrongThang <= 8) {
-        goiHocPhi = '300.000 VNĐ';
-      } else if (soBuoiTrongThang <= 12) {
-        goiHocPhi = '350.000 VNĐ';
-      } else if (soBuoiTrongThang <= 16) {
-        goiHocPhi = '400.000 VNĐ';
-      } else {
-        goiHocPhi = '450.000 VNĐ';
-      }
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === generateBracketsModal) {
+                generateBracketsModal.classList.add('hidden');
+            }
+        });
 
-      document.getElementById('goiHocPhi').value = goiHocPhi;
-    }
-
-    // Thêm hoặc cập nhật học viên
-    function themHocVien() {
-      const hoTen = document.getElementById('hoTen').value.trim();
-      const ngaySinh = document.getElementById('ngaySinh').value;
-      const gioiTinh = document.getElementById('gioiTinh').value;
-      const canNang = parseFloat(document.getElementById('canNang').value);
-      const chieuCao = parseFloat(document.getElementById('chieuCao').value);
-      const benhBamSinh = document.getElementById('benhBamSinh').value.trim();
-      const ngayDangKy = document.getElementById('ngayDangKy').value;
-      const lichTapLuyen = Array.from(document.getElementById('lichTapLuyen').selectedOptions).map(option => option.value);
-      const coSo = document.getElementById('coSo').value;
-      const capDai = document.getElementById('capDai').value;
-      const goiHocPhi = document.getElementById('goiHocPhi').value;
-      const soDienThoai = document.getElementById('soDienThoai').value.trim();
-      const diaChi = document.getElementById('diaChi').value.trim();
-
-      if (!hoTen || !ngaySinh || !gioiTinh || isNaN(canNang) || isNaN(chieuCao) || !ngayDangKy || lichTapLuyen.length === 0) {
-        alert('Vui lòng điền đầy đủ thông tin!');
-        return;
-      }
-
-      const hocVien = {
-        hoTen,
-        ngaySinh,
-        gioiTinh,
-        canNang,
-        chieuCao,
-        benhBamSinh,
-        ngayDangKy,
-        lichTapLuyen: lichTapLuyen.join(', '),
-        coSo,
-        capDai,
-        goiHocPhi,
-        soDienThoai,
-        diaChi,
-        duDieuKienThi: true // Mặc định tất cả học viên đều đủ điều kiện thi
-      };
-
-      if (hocVienIndexChinhSua === -1) {
-        hocViens.push(hocVien);
-      } else {
-        hocViens[hocVienIndexChinhSua] = hocVien;
-        hocVienIndexChinhSua = -1;
-        document.getElementById('btnCapNhatHocVien').classList.add('hidden');
-      }
-
-      renderBangHocVien();
-      clearForm();
-    }
-
-    // Hiển thị danh sách học viên
-    function renderBangHocVien() {
-      const tbody = document.querySelector('#bangHocVien tbody');
-      tbody.innerHTML = '';
-      hocViens.forEach((hv, index) => {
-        const row = `<tr>
-          <td>${hv.hoTen}</td>
-          <td>${hv.ngaySinh}</td>
-          <td>${hv.gioiTinh}</td>
-          <td>${hv.canNang}</td>
-          <td>${hv.chieuCao}</td>
-          <td>${hv.benhBamSinh || 'Không'}</td>
-          <td>${hv.ngayDangKy}</td>
-          <td>${hv.lichTapLuyen}</td>
-          <td>${hv.coSo}</td>
-          <td>${hv.capDai}</td>
-          <td>${hv.goiHocPhi}</td>
-          <td>${hv.soDienThoai}</td>
-          <td>${hv.diaChi}</td>
-          <td class="checkbox-container">
-            <input type="checkbox" id="duDieuKienThi-${index}" ${hv.duDieuKienThi ? 'checked' : ''} onchange="capNhatDieuKienThi(${index})">
-            <label for="duDieuKienThi-${index}">Đủ điều kiện</label>
-          </td>
-          <td>
-            <button onclick="chonHocVien(${index})">Chỉnh sửa</button>
-            <button onclick="xoaHocVien(${index})">Xóa</button>
-          </td>
-        </tr>`;
-        tbody.innerHTML += row;
-      });
-    }
-
-    // Chọn học viên để chỉnh sửa
-    function chonHocVien(index) {
-      const hocVien = hocViens[index];
-      document.getElementById('hoTen').value = hocVien.hoTen;
-      document.getElementById('ngaySinh').value = hocVien.ngaySinh;
-      document.getElementById('gioiTinh').value = hocVien.gioiTinh;
-      document.getElementById('canNang').value = hocVien.canNang;
-      document.getElementById('chieuCao').value = hocVien.chieuCao;
-      document.getElementById('benhBamSinh').value = hocVien.benhBamSinh;
-      document.getElementById('ngayDangKy').value = hocVien.ngayDangKy;
-      document.getElementById('lichTapLuyen').value = hocVien.lichTapLuyen.split(', ');
-      document.getElementById('coSo').value = hocVien.coSo;
-      document.getElementById('capDai').value = hocVien.capDai;
-      document.getElementById('goiHocPhi').value = hocVien.goiHocPhi;
-      document.getElementById('soDienThoai').value = hocVien.soDienThoai;
-      document.getElementById('diaChi').value = hocVien.diaChi;
-
-      hocVienIndexChinhSua = index;
-      document.getElementById('btnCapNhatHocVien').classList.remove('hidden');
-    }
-
-    // Cập nhật trạng thái "đủ điều kiện thi"
-    function capNhatDieuKienThi(index) {
-      hocViens[index].duDieuKienThi = !hocViens[index].duDieuKienThi;
-    }
-
-    // Xóa học viên
-    function xoaHocVien(index) {
-      hocViens.splice(index, 1);
-      renderBangHocVien();
-    }
-
-    // Xóa form nhập liệu
-    function clearForm() {
-      document.getElementById('hoTen').value = '';
-      document.getElementById('ngaySinh').value = '';
-      document.getElementById('gioiTinh').value = '';
-      document.getElementById('canNang').value = '';
-      document.getElementById('chieuCao').value = '';
-      document.getElementById('benhBamSinh').value = '';
-      document.getElementById('ngayDangKy').value = '';
-      document.getElementById('lichTapLuyen').value = [];
-      document.getElementById('coSo').value = 'Cơ sở 1';
-      document.getElementById('capDai').value = 'Đai trắng';
-      document.getElementById('goiHocPhi').value = '';
-      document.getElementById('soDienThoai').value = '';
-      document.getElementById('diaChi').value = '';
-    }
-
-    // Tìm kiếm học viên
-    function timKiemHocVien() {
-      const searchHoTen = document.getElementById('searchHoTen').value.toLowerCase().trim();
-      const ketQua = hocViens.filter(hv => hv.hoTen.toLowerCase().includes(searchHoTen));
-
-      const ketQuaTimKiem = document.getElementById('ketQuaTimKiem');
-      if (ketQua.length === 0) {
-        ketQuaTimKiem.innerHTML = '<p>Không tìm thấy học viên nào.</p>';
-        return;
-      }
-
-      let html = '<table>';
-      html += `
-        <thead>
-          <tr>
-            <th>Họ tên</th>
-            <th>Ngày sinh</th>
-            <th>Giới tính</th>
-            <th>Cân nặng (kg)</th>
-            <th>Chiều cao (cm)</th>
-            <th>Bệnh bẩm sinh</th>
-            <th>Ngày đăng ký</th>
-            <th>Lịch tập luyện</th>
-            <th>Cơ sở</th>
-            <th>Cấp đai</th>
-            <th>Gói học phí (VNĐ)</th>
-            <th>Số điện thoại</th>
-            <th>Địa chỉ</th>
-          </tr>
-        </thead>
-        <tbody>
-      `;
-      ketQua.forEach(hv => {
-        html += `<tr>
-          <td>${hv.hoTen}</td>
-          <td>${hv.ngaySinh}</td>
-          <td>${hv.gioiTinh}</td>
-          <td>${hv.canNang}</td>
-          <td>${hv.chieuCao}</td>
-          <td>${hv.benhBamSinh || 'Không'}</td>
-          <td>${hv.ngayDangKy}</td>
-          <td>${hv.lichTapLuyen}</td>
-          <td>${hv.coSo}</td>
-          <td>${hv.capDai}</td>
-          <td>${hv.goiHocPhi}</td>
-          <td>${hv.soDienThoai}</td>
-          <td>${hv.diaChi}</td>
-        </tr>`;
-      });
-      html += '</tbody></table>';
-      ketQuaTimKiem.innerHTML = html;
-    }
-
-    // Hiển thị tab (quản lý học viên hoặc chấm thi)
-    function showTab(tabId) {
-      document.querySelectorAll('#coachSection > div').forEach(div => div.classList.add('hidden'));
-      document.getElementById(tabId).classList.remove('hidden');
-    }
-
-    // Import file Excel
-    function importExcel() {
-      const fileInput = document.getElementById('importExcelFile');
-      const file = fileInput.files[0];
-      if (!file) {
-        alert('Vui lòng chọn file Excel!');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const sheet = workbook.Sheets[sheetName];
-          const jsonData = XLSX.utils.sheet_to_json(sheet);
-
-          // Kiểm tra định dạng cột
-          const requiredColumns = [
-            "HoTen", "NgaySinh", "GioiTinh", "CanNang", "ChieuCao",
-            "BenhBamSinh", "NgayDangKy", "LichTapLuyen", "CoSo", "CapDai",
-            "GoiHocPhi", "SoDienThoai", "DiaChi"
-          ];
-          const missingColumns = requiredColumns.filter(col => !jsonData.some(row => col in row));
-          if (missingColumns.length > 0) {
-            alert(`File Excel thiếu các cột bắt buộc: ${missingColumns.join(", ")}`);
-            return;
-          }
-
-          // Chuyển đổi dữ liệu từ Excel sang định dạng học viên
-          jsonData.forEach(row => {
-            const hocVien = {
-              hoTen: row.HoTen || '',
-              ngaySinh: row.NgaySinh || '',
-              gioiTinh: row.GioiTinh || '',
-              canNang: parseFloat(row.CanNang) || 0,
-              chieuCao: parseFloat(row.ChieuCao) || 0,
-              benhBamSinh: row.BenhBamSinh || '',
-              ngayDangKy: row.NgayDangKy || '',
-              lichTapLuyen: row.LichTapLuyen || '',
-              coSo: row.CoSo || 'Cơ sở 1',
-              capDai: row.CapDai || '',
-              goiHocPhi: row.GoiHocPhi || '',
-              soDienThoai: row.SoDienThoai || '',
-              diaChi: row.DiaChi || '',
-              duDieuKienThi: true // Mặc định tất cả học viên đều đủ điều kiện thi
-            };
-            hocViens.push(hocVien);
-          });
-
-          // Cập nhật lại bảng danh sách học viên
-          renderBangHocVien();
-          alert('Import thành công!');
-        } catch (error) {
-          alert('Đã xảy ra lỗi khi import file Excel. Vui lòng kiểm tra định dạng file.');
-          console.error(error);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-    // Export dữ liệu ra file Excel
-    function exportExcel() {
-      const worksheet = XLSX.utils.json_to_sheet(hocViens);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "DanhSachHocVien");
-      XLSX.writeFile(workbook, "DanhSachHocVien.xlsx");
-    }
-
-    // Hiển thị danh sách tổng hợp học viên
-    function renderBangTongHop() {
-      const tbody = document.querySelector('#bangTongHop tbody');
-      tbody.innerHTML = '';
-      hocViens.forEach(hv => {
-        const row = `
-          <tr>
-                      <td>${hv.hoTen}</td>
-            <td>${hv.ngaySinh}</td>
-            <td>${hv.gioiTinh}</td>
-            <td>${hv.canNang}</td>
-            <td>${hv.chieuCao}</td>
-            <td>${hv.benhBamSinh || 'Không'}</td>
-            <td>${hv.ngayDangKy}</td>
-            <td>${hv.lichTapLuyen}</td>
-            <td>${hv.coSo}</td>
-            <td>${hv.capDai}</td>
-            <td>${hv.goiHocPhi}</td>
-            <td>${hv.soDienThoai}</td>
-            <td>${hv.diaChi}</td>
-            <td>${hv.duDieuKienThi ? 'Có' : 'Không'}</td>
-          </tr>`;
-        tbody.innerHTML += row;
-      });
-    }
-
-    // Lọc danh sách học viên đủ điều kiện thi
-    function locDanhSachChamThi() {
-      const kyThi = document.getElementById('kyThi').value;
-      const capDaiChon = document.getElementById('capDaiChon').value;
-
-      // Lọc danh sách học viên đủ điều kiện thi
-      const danhSachDuDieuKien = hocViens.filter(hv => hv.duDieuKienThi && hv.capDai === capDaiChon);
-
-      // Sắp xếp học viên theo cấp đai và năm sinh
-      danhSachDuDieuKien.sort((a, b) => {
-        const danhSachCapDai = [
-          "Đai trắng",
-          "Đai vàng",
-          "Đai xanh lá",
-          "Đai xanh dương",
-          "Đai đỏ 1",
-          "Đai đỏ 2",
-          "Đai đỏ 3",
-          "Đai đen"
-        ];
-
-        const indexA = danhSachCapDai.indexOf(a.capDai);
-        const indexB = danhSachCapDai.indexOf(b.capDai);
-
-        if (indexA !== indexB) {
-          return indexA - indexB;
-        }
-
-        return new Date(a.ngaySinh) - new Date(b.ngaySinh);
-      });
-
-      // Giới hạn tối đa 6 học sinh cho kỳ thi
-      const danhSachChamThi = danhSachDuDieuKien.slice(0, 6);
-
-      const tbody = document.querySelector('#bangChamThi tbody');
-      tbody.innerHTML = '';
-      danhSachChamThi.forEach((hv, index) => {
-        const row = `
-          <tr>
-            <td>${index + 1}</td>
-            <td>${hv.hoTen}</td>
-            <td>${hv.capDai}</td>
-            <td>
-              <input type="number" class="kt-tay-chan" placeholder="Tay chân (0-10)" oninput="tinhDiemTrungBinh(${index})">
-              <input type="number" class="kt-bai-quyen-1" placeholder="Bài quyền 1 (0-10)" oninput="tinhDiemTrungBinh(${index})">
-              <input type="number" class="kt-bai-quyen-2" placeholder="Bài quyền 2 (0-10)" oninput="tinhDiemTrungBinh(${index})">
-              <input type="number" class="kt-dau-khang" placeholder="Đấu kháng (0-10)" oninput="tinhDiemTrungBinh(${index})">
-              <input type="number" class="kt-nhao-lon" placeholder="Nhào lộn (0-10)" oninput="tinhDiemTrungBinh(${index})">
-            </td>
-            <td>
-              <input type="number" class="tl-nhay-day" placeholder="Nhảy dây (0-10)" oninput="tinhDiemTrungBinh(${index})">
-              <input type="number" class="tl-chay" placeholder="Chạy (0-10)" oninput="tinhDiemTrungBinh(${index})">
-              <input type="number" class="tl-hit-dat" placeholder="Hít đất (0-10)" oninput="tinhDiemTrungBinh(${index})">
-            </td>
-            <td>
-              <input type="number" class="td-nghiem-tuc" placeholder="Nghiêm túc (0-10)" oninput="tinhDiemTrungBinh(${index})">
-              <input type="number" class="td-the-hien" placeholder="Thể hiện (0-10)" oninput="tinhDiemTrungBinh(${index})">
-            </td>
-            <td><input type="number" class="tong-diem" placeholder="Tổng điểm" readonly></td>
-            <td class="xep-hang">-</td>
-            <td>
-              <button class="fail-button" onclick="rotHocVien(${index})">RỚT</button>
-              <button class="absent-button" onclick="vangHocVien(${index})">VẮNG</button>
-            </td>
-          </tr>`;
-        tbody.innerHTML += row;
-      });
-
-      // Tự động tính xếp hạng sau khi nhập điểm
-      setTimeout(() => tinhXepHang(), 0);
-    }
-
-    // Tính tổng điểm và điểm trung bình
-    function tinhDiemTrungBinh(index) {
-      const rows = document.querySelectorAll('#bangChamThi tbody tr');
-      const row = rows[index];
-
-      // Kỹ thuật
-      const ktTayChan = parseFloat(row.querySelector('.kt-tay-chan').value) || 0;
-      const ktBaiQuyen1 = parseFloat(row.querySelector('.kt-bai-quyen-1').value) || 0;
-      const ktBaiQuyen2 = parseFloat(row.querySelector('.kt-bai-quyen-2').value) || 0;
-      const ktDauKhang = parseFloat(row.querySelector('.kt-dau-khang').value) || 0;
-      const ktNhaoLon = parseFloat(row.querySelector('.kt-nhao-lon').value) || 0;
-      const diemKyThuat = (ktTayChan + ktBaiQuyen1 + ktBaiQuyen2 + ktDauKhang + ktNhaoLon) / 5;
-
-      // Thể lực
-      const tlNhayDay = parseFloat(row.querySelector('.tl-nhay-day').value) || 0;
-      const tlChay = parseFloat(row.querySelector('.tl-chay').value) || 0;
-      const tlHitDat = parseFloat(row.querySelector('.tl-hit-dat').value) || 0;
-      const diemTheLuc = (tlNhayDay + tlChay + tlHitDat) / 3;
-
-      // Thái độ
-      const tdNghiemTuc = parseFloat(row.querySelector('.td-nghiem-tuc').value) || 0;
-      const tdTheHien = parseFloat(row.querySelector('.td-the-hien').value) || 0;
-      const diemThaiDo = (tdNghiemTuc + tdTheHien) / 2;
-
-      // Tổng điểm
-      const tongDiem = ((diemKyThuat + diemTheLuc + diemThaiDo) / 3).toFixed(2);
-      row.querySelector('.tong-diem').value = tongDiem;
-
-      // Tính lại xếp hạng
-      tinhXepHang();
-    }
-
-    // Tính xếp hạng
-    function tinhXepHang() {
-      const rows = document.querySelectorAll('#bangChamThi tbody tr');
-      const danhSachDiem = Array.from(rows).map(row => {
-        const tongDiem = parseFloat(row.querySelector('.tong-diem').value) || 0;
-        return { row, tongDiem };
-      });
-
-      // Sắp xếp theo tổng điểm giảm dần
-      danhSachDiem.sort((a, b) => b.tongDiem - a.tongDiem);
-
-      // Gán hạng
-      danhSachDiem.forEach((item, index) => {
-        item.row.querySelector('.xep-hang').textContent = `Hạng ${index + 1}`;
-      });
-    }
-
-    // Đánh dấu học viên rớt
-    function rotHocVien(index) {
-      const rows = document.querySelectorAll('#bangChamThi tbody tr');
-      const row = rows[index];
-      row.querySelector('.fail-button').disabled = true;
-      row.querySelector('.fail-button').textContent = 'ĐÃ RỚT';
-    }
-
-    // Đánh dấu học viên vắng
-    function vangHocVien(index) {
-      const rows = document.querySelectorAll('#bangChamThi tbody tr');
-      const row = rows[index];
-      row.querySelector('.absent-button').disabled = true;
-      row.querySelector('.absent-button').textContent = 'VẮNG';
-    }
-
-    // Hoàn thành chấm thi
-    function hoanThanhChamThi() {
-      const rows = document.querySelectorAll('#bangChamThi tbody tr');
-      rows.forEach(row => {
-        const hoTen = row.querySelector('td:nth-child(2)').textContent;
-        const capDaiHienTai = row.querySelector('td:nth-child(3)').textContent;
-        const failButton = row.querySelector('.fail-button');
-        const absentButton = row.querySelector('.absent-button');
-
-        // Tìm học viên trong danh sách chính
-        const hocVien = hocViens.find(hv => hv.hoTen === hoTen && hv.capDai === capDaiHienTai);
-
-        if (hocVien) {
-          if (failButton.disabled || absentButton.disabled) {
-            // Học viên bị đánh dấu "RỚT" hoặc "VẮNG"
-            hocVien.duDieuKienThi = false; // Đánh dấu không đủ điều kiện thi lần sau
-          } else {
-            // Học viên vượt qua kỳ thi -> Nâng cấp đai
-            const capDaiMoi = tinhCapDaiMoi(hocVien.capDai);
-            hocVien.capDai = capDaiMoi;
-          }
-        }
-      });
-
-      // Cập nhật lại danh sách học viên
-      renderBangHocVien();
-      alert('Chấm thi hoàn tất! Cấp đai đã được cập nhật.');
-    }
-
-    // Tính cấp đai mới
-    function tinhCapDaiMoi(capDaiHienTai) {
-      const danhSachCapDai = [
-        "Đai trắng",
-        "Đai vàng",
-        "Đai xanh lá",
-        "Đai xanh dương",
-        "Đai đỏ 1",
-        "Đai đỏ 2",
-        "Đai đỏ 3",
-        "Đai đen"
-      ];
-
-      const currentIndex = danhSachCapDai.indexOf(capDaiHienTai);
-      if (currentIndex === -1 || currentIndex === danhSachCapDai.length - 1) {
-        return capDaiHienTai; // Không thể nâng cấp thêm
-      }
-
-      return danhSachCapDai[currentIndex + 1];
-    }
-  </script>
+        // Simulate loading for demo purposes
+        setTimeout(() => {
+            const loadingElements = document.querySelectorAll('.animate-pulse');
+            loadingElements.forEach(el => {
+                el.classList.remove('animate-pulse');
+            });
+        }, 2000);
+    </script>
 </body>
 </html>
